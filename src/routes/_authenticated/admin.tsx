@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Plus, Save, Trash2, LayoutDashboard } from "lucide-react";
+import { ExternalLink, Loader2, Plus, Save, Trash2, LayoutDashboard } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
