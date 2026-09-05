@@ -67,13 +67,6 @@ export function AppShell({
         })}
 
         <div className="mt-auto flex flex-col items-center gap-1">
-          <span className="relative flex size-9 items-center justify-center rounded-lg text-sidebar-foreground/70">
-            <Bell className="size-[18px]" />
-            <span className="absolute right-2 top-2 size-1.5 rounded-full bg-destructive" />
-          </span>
-          <span className="flex size-9 items-center justify-center rounded-lg text-sidebar-foreground/70">
-            <Search className="size-[18px]" />
-          </span>
           <button
             onClick={signOut}
             title="Sign out"
