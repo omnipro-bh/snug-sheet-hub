@@ -6,13 +6,23 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
-import { createUser, deleteUser, getMyAccount, listUsers, updateUser } from "@/lib/admin.functions";
+import {
+  createDashboard,
+  createUser,
+  deleteDashboard,
+  deleteUser,
+  getMyAccount,
+  listUserDashboards,
+  listUsers,
+  updateDashboard,
+  updateUser,
+} from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
       { title: "Users — Insight Portal" },
-      { name: "description", content: "Create accounts and assign each one its reporting dashboard." },
+      { name: "description", content: "Create accounts and assign each one its reporting dashboards." },
       { property: "og:title", content: "Users — Insight Portal" },
       { property: "og:description", content: "Create accounts and assign dashboards." },
     ],
@@ -25,6 +35,8 @@ const field =
   "w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/25";
 const ghostBtn =
   "inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition hover:bg-accent disabled:opacity-60";
+const primaryBtn =
+  "inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-60";
 
 function AdminPage() {
   const qc = useQueryClient();
@@ -33,6 +45,7 @@ function AdminPage() {
   const create = useServerFn(createUser);
   const update = useServerFn(updateUser);
   const remove = useServerFn(deleteUser);
+  const addDashboard = useServerFn(createDashboard);
 
   const account = useQuery({ queryKey: ["my-account"], queryFn: () => fetchAccount() });
   const users = useQuery({
@@ -44,15 +57,22 @@ function AdminPage() {
   const [form, setForm] = useState({ username: "", password: "", fullName: "", dashboardUrl: "" });
 
   const createMutation = useMutation({
-    mutationFn: (input: typeof form) =>
-      create({
+    mutationFn: async (input: typeof form) => {
+      const created: any = await create({
         data: {
           username: input.username,
           password: input.password,
           fullName: input.fullName,
           dashboardUrl: input.dashboardUrl,
         },
-      }),
+      });
+      if (input.dashboardUrl && created?.id) {
+        await addDashboard({
+          data: { userId: created.id, name: "Main dashboard", url: input.dashboardUrl },
+        });
+      }
+      return created;
+    },
     onSuccess: () => {
       toast.success("Account created");
       setForm({ username: "", password: "", fullName: "", dashboardUrl: "" });
@@ -62,10 +82,9 @@ function AdminPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (input: { id: string; dashboardUrl?: string; password?: string; isActive?: boolean }) =>
-      update({ data: input }),
+    mutationFn: (input: { id: string; password?: string; isActive?: boolean }) => update({ data: input }),
     onSuccess: () => {
-      toast.success("Saved");
+      toast.success("Account updated");
       qc.invalidateQueries({ queryKey: ["users"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -149,7 +168,7 @@ function AdminPage() {
             />
             <textarea
               className={`${field} min-h-[84px]`}
-              placeholder="Google Sheet published link (https://docs.google.com/...)"
+              placeholder="First dashboard link (https://docs.google.com/...)"
               value={form.dashboardUrl}
               onChange={(e) => setForm({ ...form, dashboardUrl: e.target.value })}
             />
@@ -201,10 +220,9 @@ function UserCard({
   user: any;
   saving: boolean;
   deleting: boolean;
-  onSave: (patch: { dashboardUrl?: string; password?: string; isActive?: boolean }) => void;
+  onSave: (patch: { password?: string; isActive?: boolean }) => void;
   onDelete: () => void;
 }) {
-  const [dashboardUrl, setDashboardUrl] = useState<string>(user.dashboard_url ?? "");
   const [password, setPassword] = useState("");
 
   return (
@@ -228,16 +246,9 @@ function UserCard({
         </span>
       </div>
 
+      <DashboardManager userId={user.id} />
+
       <div className="mt-4 grid gap-3 md:grid-cols-2">
-        <label className="text-xs font-medium text-muted-foreground">
-          Dashboard link
-          <textarea
-            className={`${field} mt-1 min-h-[64px]`}
-            value={dashboardUrl}
-            onChange={(e) => setDashboardUrl(e.target.value)}
-            placeholder="https://docs.google.com/spreadsheets/d/e/.../pubhtml"
-          />
-        </label>
         <label className="text-xs font-medium text-muted-foreground">
           New password (optional)
           <input
@@ -251,23 +262,18 @@ function UserCard({
 
       <div className="mt-4 flex flex-wrap gap-2">
         <button
-          disabled={saving}
+          disabled={saving || !password}
           onClick={() => {
-            onSave({ dashboardUrl, ...(password ? { password } : {}) });
+            onSave({ password });
             setPassword("");
           }}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
+          className={primaryBtn}
         >
-          <Save className="size-4" /> Save
+          <Save className="size-4" /> Save password
         </button>
         <button disabled={saving} onClick={() => onSave({ isActive: !user.is_active })} className={ghostBtn}>
           {user.is_active ? "Disable" : "Enable"}
         </button>
-        {dashboardUrl ? (
-          <a href={dashboardUrl} target="_blank" rel="noreferrer" className={ghostBtn}>
-            <ExternalLink className="size-4" /> View dashboard
-          </a>
-        ) : null}
         <button
           disabled={deleting}
           onClick={() => onDelete()}
@@ -277,5 +283,147 @@ function UserCard({
         </button>
       </div>
     </article>
+  );
+}
+
+function DashboardManager({ userId }: { userId: string }) {
+  const qc = useQueryClient();
+  const fetchList = useServerFn(listUserDashboards);
+  const add = useServerFn(createDashboard);
+  const edit = useServerFn(updateDashboard);
+  const drop = useServerFn(deleteDashboard);
+
+  const list = useQuery({
+    queryKey: ["user-dashboards", userId],
+    queryFn: () => fetchList({ data: { userId } }),
+  });
+
+  const [draft, setDraft] = useState({ name: "", url: "" });
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["user-dashboards", userId] });
+    qc.invalidateQueries({ queryKey: ["my-dashboards"] });
+  };
+
+  const addMutation = useMutation({
+    mutationFn: () => add({ data: { userId, name: draft.name, url: draft.url } }),
+    onSuccess: () => {
+      toast.success("Dashboard added");
+      setDraft({ name: "", url: "" });
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const editMutation = useMutation({
+    mutationFn: (input: { id: string; name: string; url: string }) => edit({ data: input }),
+    onSuccess: () => {
+      toast.success("Dashboard updated");
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => drop({ data: { id } }),
+    onSuccess: () => {
+      toast.success("Dashboard removed");
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <div className="mt-4 rounded-lg border border-border p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Dashboards</p>
+
+      <div className="mt-3 space-y-3">
+        {list.isLoading ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" /> Loading
+          </div>
+        ) : (list.data ?? []).length === 0 ? (
+          <p className="text-sm text-muted-foreground">No dashboards yet for this account.</p>
+        ) : (
+          (list.data ?? []).map((d: any) => (
+            <DashboardRow
+              key={d.id}
+              dashboard={d}
+              saving={editMutation.isPending}
+              onSave={(name, url) => editMutation.mutate({ id: d.id, name, url })}
+              onDelete={() => deleteMutation.mutate(d.id)}
+            />
+          ))
+        )}
+      </div>
+
+      <form
+        className="mt-4 flex flex-wrap items-end gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          addMutation.mutate();
+        }}
+      >
+        <input
+          className={`${field} min-w-[140px] max-w-[200px] flex-1`}
+          placeholder="Dashboard name"
+          value={draft.name}
+          onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+          required
+        />
+        <input
+          className={`${field} min-w-[220px] flex-[2]`}
+          placeholder="https://docs.google.com/spreadsheets/d/e/.../pubhtml"
+          value={draft.url}
+          onChange={(e) => setDraft({ ...draft, url: e.target.value })}
+          required
+        />
+        <button type="submit" disabled={addMutation.isPending} className={primaryBtn}>
+          {addMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+          Add dashboard
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function DashboardRow({
+  dashboard,
+  saving,
+  onSave,
+  onDelete,
+}: {
+  dashboard: any;
+  saving: boolean;
+  onSave: (name: string, url: string) => void;
+  onDelete: () => void;
+}) {
+  const [name, setName] = useState(dashboard.name);
+  const [url, setUrl] = useState(dashboard.url);
+
+  return (
+    <div className="flex flex-wrap items-end gap-2">
+      <input
+        className={`${field} min-w-[140px] max-w-[200px] flex-1`}
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <input
+        className={`${field} min-w-[220px] flex-[2]`}
+        value={url}
+        onChange={(e) => setUrl(e.target.value)}
+      />
+      <button disabled={saving} onClick={() => onSave(name, url)} className={ghostBtn}>
+        <Save className="size-4" /> Save
+      </button>
+      <a href={url} target="_blank" rel="noreferrer" className={ghostBtn}>
+        <ExternalLink className="size-4" /> View
+      </a>
+      <button
+        onClick={onDelete}
+        className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-destructive transition hover:bg-destructive/10"
+      >
+        <Trash2 className="size-4" />
+      </button>
+    </div>
   );
 }
