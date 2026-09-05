@@ -38,7 +38,7 @@ function Dashboard() {
       badge="Live"
       subtitle={profile?.full_name || profile?.username || "Account"}
       initials={initials}
-      isAdmin={data?.isAdmin}
+      isAdmin={Boolean(data?.isAdmin)}
       actions={
         <>
           {data?.isAdmin ? (
