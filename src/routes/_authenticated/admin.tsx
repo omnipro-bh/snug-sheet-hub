@@ -263,6 +263,11 @@ function UserCard({
         <button disabled={saving} onClick={() => onSave({ isActive: !user.is_active })} className={ghostBtn}>
           {user.is_active ? "Disable" : "Enable"}
         </button>
+        {dashboardUrl ? (
+          <a href={dashboardUrl} target="_blank" rel="noreferrer" className={ghostBtn}>
+            <ExternalLink className="size-4" /> View dashboard
+          </a>
+        ) : null}
         <button
           disabled={deleting}
           onClick={() => onDelete()}
