@@ -72,7 +72,7 @@ export function AppShell({
             active && "bg-sidebar-accent text-sidebar-accent-foreground",
             disabled ? "opacity-45" : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
           );
-          if (disabled) {
+          if (disabled || !item.to) {
             return (
               <span key={item.label} title={item.label} className={className} aria-hidden>
                 <item.icon className="size-[18px]" />
@@ -85,6 +85,7 @@ export function AppShell({
             </Link>
           );
         })}
+
         <div className="mt-auto flex flex-col items-center gap-1">
           <span className="relative flex size-9 items-center justify-center rounded-lg text-sidebar-foreground/70">
             <Bell className="size-[18px]" />
