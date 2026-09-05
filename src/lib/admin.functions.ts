@@ -125,13 +125,18 @@ export const updateUser = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const patch: Record<string, unknown> = {};
-    if (data.fullName !== undefined) patch['full_name'] = data.fullName || null;
-    if (data.dashboardUrl !== undefined) patch['dashboard_url'] = data.dashboardUrl || null;
-    if (data.isActive !== undefined) patch['is_active'] = data.isActive;
+    const patch: {
+      full_name?: string | null;
+      dashboard_url?: string | null;
+      is_active?: boolean;
+    } = {};
+    if (data.fullName !== undefined) patch.full_name = data.fullName || null;
+    if (data.dashboardUrl !== undefined) patch.dashboard_url = data.dashboardUrl || null;
+    if (data.isActive !== undefined) patch.is_active = data.isActive;
 
     if (Object.keys(patch).length > 0) {
       const { error } = await supabaseAdmin.from("profiles").update(patch).eq("id", data.id);
+
       if (error) throw new Error(error.message);
     }
 
