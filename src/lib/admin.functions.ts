@@ -197,3 +197,97 @@ export const createFirstAdmin = createServerFn({ method: "POST" })
 
     return { ok: true as const };
   });
+
+/* ---------------------------------- Dashboards ---------------------------------- */
+
+const dashboardUrlSchema = z
+  .string()
+  .trim()
+  .min(1, "Dashboard link is required")
+  .max(2000)
+  .refine((v) => /^https:\/\/docs\.google\.com\//.test(v), {
+    message: "Must be a https://docs.google.com/ link",
+  });
+
+const dashboardNameSchema = z.string().trim().min(1, "Name is required").max(80);
+
+export const listMyDashboards = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("dashboards")
+      .select("id, name, url, sort_order, created_at")
+      .eq("user_id", context.userId)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true });
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+export const listUserDashboards = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ userId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { data: rows, error } = await context.supabase
+      .from("dashboards")
+      .select("id, user_id, name, url, sort_order, created_at")
+      .eq("user_id", data.userId)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true });
+    if (error) throw new Error(error.message);
+    return rows ?? [];
+  });
+
+export const createDashboard = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        userId: z.string().uuid().optional(),
+        name: dashboardNameSchema,
+        url: dashboardUrlSchema,
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const targetId = data.userId ?? context.userId;
+    if (targetId !== context.userId) await assertAdmin(context);
+
+    const { error } = await context.supabase
+      .from("dashboards")
+      .insert({ user_id: targetId, name: data.name, url: data.url });
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
+export const updateDashboard = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        name: dashboardNameSchema.optional(),
+        url: dashboardUrlSchema.optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const patch: { name?: string; url?: string } = {};
+    if (data.name !== undefined) patch.name = data.name;
+    if (data.url !== undefined) patch.url = data.url;
+    if (Object.keys(patch).length === 0) return { ok: true as const };
+
+    const { error } = await context.supabase.from("dashboards").update(patch).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
+export const deleteDashboard = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.from("dashboards").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
