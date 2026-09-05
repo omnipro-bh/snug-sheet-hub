@@ -52,7 +52,8 @@ function Dashboard() {
 
   const list = dashboards.data ?? [];
   useEffect(() => {
-    if (list.length > 0 && !list.some((d: any) => d.id === activeId)) setActiveId(list[0].id);
+    const first = list[0];
+    if (first && !list.some((d: any) => d.id === activeId)) setActiveId(first.id);
   }, [list, activeId]);
 
   const active = list.find((d: any) => d.id === activeId) ?? list[0];
