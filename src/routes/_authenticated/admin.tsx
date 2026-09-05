@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Plus, Save, Trash2, LayoutDashboard } from "lucide-react";
+import { ExternalLink, Loader2, Plus, Save, Trash2, LayoutDashboard } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -263,6 +263,11 @@ function UserCard({
         <button disabled={saving} onClick={() => onSave({ isActive: !user.is_active })} className={ghostBtn}>
           {user.is_active ? "Disable" : "Enable"}
         </button>
+        {dashboardUrl ? (
+          <a href={dashboardUrl} target="_blank" rel="noreferrer" className={ghostBtn}>
+            <ExternalLink className="size-4" /> View dashboard
+          </a>
+        ) : null}
         <button
           disabled={deleting}
           onClick={() => onDelete()}

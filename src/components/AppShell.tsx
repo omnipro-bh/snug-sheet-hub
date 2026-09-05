@@ -1,18 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import {
-  Bell,
-  CircleHelp,
-  Code2,
-  FolderClosed,
-  Home,
-  LayoutGrid,
-  LogOut,
-  Megaphone,
-  MessagesSquare,
-  Search,
-  Settings,
-  Users,
-} from "lucide-react";
+import { Home, LogOut, Users } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -22,14 +9,7 @@ type NavItem = { icon: typeof Home; label: string; to?: string };
 
 const primaryNav: NavItem[] = [
   { icon: Home, label: "Home", to: "/dashboard" },
-  { icon: MessagesSquare, label: "Conversations" },
-  { icon: Megaphone, label: "Campaigns" },
-  { icon: LayoutGrid, label: "Funnels" },
   { icon: Users, label: "Users", to: "/admin" },
-  { icon: FolderClosed, label: "Files" },
-  { icon: Code2, label: "Developers" },
-  { icon: Settings, label: "Settings" },
-  { icon: CircleHelp, label: "Help" },
 ];
 
 export function AppShell({
@@ -87,13 +67,6 @@ export function AppShell({
         })}
 
         <div className="mt-auto flex flex-col items-center gap-1">
-          <span className="relative flex size-9 items-center justify-center rounded-lg text-sidebar-foreground/70">
-            <Bell className="size-[18px]" />
-            <span className="absolute right-2 top-2 size-1.5 rounded-full bg-destructive" />
-          </span>
-          <span className="flex size-9 items-center justify-center rounded-lg text-sidebar-foreground/70">
-            <Search className="size-[18px]" />
-          </span>
           <button
             onClick={signOut}
             title="Sign out"
