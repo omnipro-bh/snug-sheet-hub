@@ -30,19 +30,14 @@ const field =
   "w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/25";
 
 function Dashboard() {
-  const qc = useQueryClient();
   const fetchAccount = useServerFn(getMyAccount);
   const fetchDashboards = useServerFn(listMyDashboards);
-  const create = useServerFn(createDashboard);
-  const remove = useServerFn(deleteDashboard);
 
   const account = useQuery({ queryKey: ["my-account"], queryFn: () => fetchAccount() });
   const dashboards = useQuery({ queryKey: ["my-dashboards"], queryFn: () => fetchDashboards() });
 
   const [reloadKey, setReloadKey] = useState(0);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [adding, setAdding] = useState(false);
-  const [form, setForm] = useState({ name: "", url: "" });
 
   const list = dashboards.data ?? [];
   useEffect(() => {
@@ -51,26 +46,6 @@ function Dashboard() {
   }, [list, activeId]);
 
   const active = list.find((d: any) => d.id === activeId) ?? list[0];
-
-  const createMutation = useMutation({
-    mutationFn: () => create({ data: { name: form.name, url: form.url } }),
-    onSuccess: () => {
-      toast.success("Dashboard added");
-      setForm({ name: "", url: "" });
-      setAdding(false);
-      qc.invalidateQueries({ queryKey: ["my-dashboards"] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => remove({ data: { id } }),
-    onSuccess: () => {
-      toast.success("Dashboard removed");
-      qc.invalidateQueries({ queryKey: ["my-dashboards"] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
 
   const profile = account.data?.profile;
   const initials = (profile?.full_name || profile?.username || "??").slice(0, 2).toUpperCase();
