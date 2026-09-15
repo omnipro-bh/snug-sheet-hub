@@ -251,8 +251,9 @@ export const createDashboard = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    // Only admins can create dashboards (for themselves or any user).
+    await assertAdmin(context);
     const targetId = data.userId ?? context.userId;
-    if (targetId !== context.userId) await assertAdmin(context);
 
     const { error } = await context.supabase
       .from("dashboards")
@@ -273,6 +274,7 @@ export const updateDashboard = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    await assertAdmin(context);
     const patch: { name?: string; url?: string } = {};
     if (data.name !== undefined) patch.name = data.name;
     if (data.url !== undefined) patch.url = data.url;
@@ -287,6 +289,7 @@ export const deleteDashboard = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
+    await assertAdmin(context);
     const { error } = await context.supabase.from("dashboards").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true as const };
