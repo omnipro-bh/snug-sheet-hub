@@ -26,8 +26,6 @@ function toEmbedUrl(url: string) {
 
 const ghostBtn =
   "inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground shadow-panel transition hover:bg-accent disabled:opacity-60";
-const field =
-  "w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/25";
 
 function Dashboard() {
   const fetchAccount = useServerFn(getMyAccount);
@@ -64,9 +62,6 @@ function Dashboard() {
               <Users className="size-4" /> Manage users
             </Link>
           ) : null}
-          <button onClick={() => setAdding((v) => !v)} className={ghostBtn}>
-            <Plus className="size-4" /> Add dashboard
-          </button>
           <button onClick={() => setReloadKey((k) => k + 1)} className={ghostBtn}>
             <RefreshCw className="size-4" /> Refresh
           </button>
@@ -83,48 +78,6 @@ function Dashboard() {
         </>
       }
     >
-      {adding ? (
-        <form
-          className="mb-3 flex flex-wrap items-end gap-3 rounded-xl border border-border bg-card p-4 shadow-panel"
-          onSubmit={(e) => {
-            e.preventDefault();
-            createMutation.mutate();
-          }}
-        >
-          <label className="min-w-[180px] flex-1 text-xs font-medium text-muted-foreground">
-            Dashboard name
-            <input
-              className={`${field} mt-1`}
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="Sales overview"
-              required
-            />
-          </label>
-          <label className="min-w-[260px] flex-[2] text-xs font-medium text-muted-foreground">
-            Google Sheet published link
-            <input
-              className={`${field} mt-1`}
-              value={form.url}
-              onChange={(e) => setForm({ ...form, url: e.target.value })}
-              placeholder="https://docs.google.com/spreadsheets/d/e/.../pubhtml"
-              required
-            />
-          </label>
-          <button
-            type="submit"
-            disabled={createMutation.isPending}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
-          >
-            {createMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
-            Add
-          </button>
-          <button type="button" onClick={() => setAdding(false)} className={ghostBtn}>
-            <X className="size-4" /> Cancel
-          </button>
-        </form>
-      ) : null}
-
       {list.length > 0 ? (
         <div className="mb-3 flex flex-wrap items-center gap-2">
           {list.map((d: any) => (
