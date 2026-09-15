@@ -112,7 +112,7 @@ function Dashboard() {
           <div className="flex h-full flex-col items-center justify-center px-6 text-center">
             <p className="text-sm font-medium text-foreground">No dashboard yet</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Add one with “Add dashboard”, or ask your administrator to link a report.
+              Ask your administrator to link a report to your account.
             </p>
           </div>
         )}
