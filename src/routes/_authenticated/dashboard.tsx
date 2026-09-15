@@ -1,17 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Maximize2, Plus, RefreshCw, Trash2, Users, X } from "lucide-react";
+import { Loader2, Maximize2, RefreshCw, Users } from "lucide-react";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
-import {
-  createDashboard,
-  deleteDashboard,
-  getMyAccount,
-  listMyDashboards,
-} from "@/lib/admin.functions";
+import { getMyAccount, listMyDashboards } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
