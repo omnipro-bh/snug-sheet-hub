@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Maximize2, RefreshCw, Users } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { AppShell } from "@/components/AppShell";
 import { getMyAccount, listMyDashboards } from "@/lib/admin.functions";
@@ -35,6 +35,7 @@ function Dashboard() {
   const dashboards = useQuery({ queryKey: ["my-dashboards"], queryFn: () => fetchDashboards() });
 
   const [reloadKey, setReloadKey] = useState(0);
+  const frameWrapRef = useRef<HTMLDivElement | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const list = dashboards.data ?? [];
@@ -66,14 +67,20 @@ function Dashboard() {
             <RefreshCw className="size-4" /> Refresh
           </button>
           {active?.url ? (
-            <a
-              href={active.url}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              onClick={() => {
+                const el = frameWrapRef.current;
+                if (!el) return;
+                if (document.fullscreenElement) {
+                  void document.exitFullscreen();
+                } else {
+                  void el.requestFullscreen?.();
+                }
+              }}
               className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition hover:opacity-90"
             >
-              <Maximize2 className="size-4" /> Open full view
-            </a>
+              <Maximize2 className="size-4" /> Full screen
+            </button>
           ) : null}
         </>
       }
@@ -96,7 +103,10 @@ function Dashboard() {
         </div>
       ) : null}
 
-      <div className="h-[calc(100vh-160px)] min-h-[480px] overflow-hidden rounded-xl border border-border bg-card shadow-panel">
+      <div
+        ref={frameWrapRef}
+        className="h-[calc(100vh-160px)] min-h-[480px] overflow-hidden rounded-xl border border-border bg-card shadow-panel fullscreen:h-screen fullscreen:rounded-none fullscreen:border-0"
+      >
         {dashboards.isLoading ? (
           <div className="flex h-full items-center justify-center text-muted-foreground">
             <Loader2 className="size-5 animate-spin" />
