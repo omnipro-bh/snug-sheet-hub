@@ -31,8 +31,19 @@ function Dashboard() {
   const fetchAccount = useServerFn(getMyAccount);
   const fetchDashboards = useServerFn(listMyDashboards);
 
-  const account = useQuery({ queryKey: ["my-account"], queryFn: () => fetchAccount() });
-  const dashboards = useQuery({ queryKey: ["my-dashboards"], queryFn: () => fetchDashboards() });
+  const account = useQuery({
+    queryKey: ["my-account"],
+    queryFn: () => fetchAccount(),
+    retry: 1,
+  });
+  const dashboards = useQuery({
+    queryKey: ["my-dashboards"],
+    queryFn: async () => {
+      const rows = await fetchDashboards();
+      return Array.isArray(rows) ? rows : [];
+    },
+    retry: 1,
+  });
 
   const [reloadKey, setReloadKey] = useState(0);
   const frameWrapRef = useRef<HTMLDivElement | null>(null);
@@ -110,6 +121,16 @@ function Dashboard() {
         {dashboards.isLoading ? (
           <div className="flex h-full items-center justify-center text-muted-foreground">
             <Loader2 className="size-5 animate-spin" />
+          </div>
+        ) : dashboards.isError ? (
+          <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+            <p className="text-sm font-medium text-foreground">We couldn't load your reports</p>
+            <p className="text-sm text-muted-foreground">
+              {(dashboards.error as Error)?.message || "Please try again in a moment."}
+            </p>
+            <button onClick={() => void dashboards.refetch()} className={ghostBtn}>
+              <RefreshCw className="size-4" /> Try again
+            </button>
           </div>
         ) : active?.url ? (
           <iframe
