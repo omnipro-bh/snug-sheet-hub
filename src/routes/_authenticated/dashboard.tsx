@@ -31,8 +31,19 @@ function Dashboard() {
   const fetchAccount = useServerFn(getMyAccount);
   const fetchDashboards = useServerFn(listMyDashboards);
 
-  const account = useQuery({ queryKey: ["my-account"], queryFn: () => fetchAccount() });
-  const dashboards = useQuery({ queryKey: ["my-dashboards"], queryFn: () => fetchDashboards() });
+  const account = useQuery({
+    queryKey: ["my-account"],
+    queryFn: () => fetchAccount(),
+    retry: 1,
+  });
+  const dashboards = useQuery({
+    queryKey: ["my-dashboards"],
+    queryFn: async () => {
+      const rows = await fetchDashboards();
+      return Array.isArray(rows) ? rows : [];
+    },
+    retry: 1,
+  });
 
   const [reloadKey, setReloadKey] = useState(0);
   const frameWrapRef = useRef<HTMLDivElement | null>(null);
