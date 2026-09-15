@@ -81,25 +81,17 @@ function Dashboard() {
       {list.length > 0 ? (
         <div className="mb-3 flex flex-wrap items-center gap-2">
           {list.map((d: any) => (
-            <span
+            <button
               key={d.id}
-              className={`group inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition ${
+              onClick={() => setActiveId(d.id)}
+              className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
                 d.id === active?.id
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-card text-foreground hover:bg-accent"
               }`}
             >
-              <button onClick={() => setActiveId(d.id)} className="font-medium">
-                {d.name}
-              </button>
-              <button
-                onClick={() => deleteMutation.mutate(d.id)}
-                title="Remove dashboard"
-                className="opacity-0 transition group-hover:opacity-70 hover:opacity-100"
-              >
-                <Trash2 className="size-3.5" />
-              </button>
-            </span>
+              {d.name}
+            </button>
           ))}
         </div>
       ) : null}
