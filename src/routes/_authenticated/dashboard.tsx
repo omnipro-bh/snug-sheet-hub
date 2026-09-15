@@ -122,6 +122,16 @@ function Dashboard() {
           <div className="flex h-full items-center justify-center text-muted-foreground">
             <Loader2 className="size-5 animate-spin" />
           </div>
+        ) : dashboards.isError ? (
+          <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+            <p className="text-sm font-medium text-foreground">We couldn't load your reports</p>
+            <p className="text-sm text-muted-foreground">
+              {(dashboards.error as Error)?.message || "Please try again in a moment."}
+            </p>
+            <button onClick={() => void dashboards.refetch()} className={ghostBtn}>
+              <RefreshCw className="size-4" /> Try again
+            </button>
+          </div>
         ) : active?.url ? (
           <iframe
             key={`${active.id}-${reloadKey}`}
