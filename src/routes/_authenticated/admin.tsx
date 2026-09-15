@@ -188,6 +188,16 @@ function AdminPage() {
             <div className={`${panel} flex items-center justify-center p-10 text-muted-foreground`}>
               <Loader2 className="size-5 animate-spin" />
             </div>
+          ) : users.isError ? (
+            <div className={`${panel} p-10 text-center`}>
+              <p className="text-sm font-medium text-destructive">Couldn't load the user list</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {(users.error as Error)?.message ?? "Something went wrong while fetching accounts."}
+              </p>
+              <button onClick={() => users.refetch()} className={`${ghostBtn} mt-4`}>
+                Try again
+              </button>
+            </div>
           ) : (users.data ?? []).length === 0 ? (
             <div className={`${panel} p-10 text-center text-sm text-muted-foreground`}>
               No accounts yet — create the first one on the left.

@@ -59,6 +59,7 @@ export const listUsers = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
 
+    // Roles are a nice-to-have badge here; never fail the whole list if this read fails.
     const { data: roles } = await context.supabase.from("user_roles").select("user_id, role");
     const adminIds = new Set((roles ?? []).filter((r: any) => r.role === "admin").map((r: any) => r.user_id));
 
