@@ -1,4 +1,5 @@
-import { describe, expect, test } from "bun:test";
+import { describe, test } from "node:test";
+import { deepStrictEqual } from "node:assert";
 import { resolveAssignedDashboards } from "./dashboard-data";
 
 const profile = {
@@ -9,7 +10,7 @@ const profile = {
 
 describe("assigned dashboard reads", () => {
   test("reads the original profile report when there are no named dashboards", () => {
-    expect(resolveAssignedDashboards([], profile)).toEqual([{
+    deepStrictEqual(resolveAssignedDashboards([], profile), [{
       id: "profile-assigned-user", name: "Main dashboard", url: profile.dashboard_url,
       sort_order: 0, created_at: profile.created_at,
     }]);
@@ -17,11 +18,11 @@ describe("assigned dashboard reads", () => {
 
   test("keeps named dashboard assignments instead of duplicating the profile report", () => {
     const rows = [{ id: "named", name: "Sales", url: profile.dashboard_url, sort_order: 0, created_at: profile.created_at }];
-    expect(resolveAssignedDashboards(rows, profile)).toEqual(rows);
+    deepStrictEqual(resolveAssignedDashboards(rows, profile), rows);
   });
 
   test("does not invent a dashboard when no report is assigned", () => {
-    expect(resolveAssignedDashboards([], { ...profile, dashboard_url: null })).toEqual([]);
-    expect(resolveAssignedDashboards([], null)).toEqual([]);
+    deepStrictEqual(resolveAssignedDashboards([], { ...profile, dashboard_url: null }), []);
+    deepStrictEqual(resolveAssignedDashboards([], null), []);
   });
 });
