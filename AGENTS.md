@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Resolve report assignments through `dashboard-data`: prefer named dashboards, falling back to the signed-in user's profile link only when none exist, to preserve original account assignments without duplicating reports.
+- Authorize administrators through `has_role` backed by `user_roles`; report links never determine privileges.

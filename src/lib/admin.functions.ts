@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { normalizeUsername, usernameToEmail } from "@/lib/username";
+import { resolveAssignedDashboards } from "@/lib/dashboard-data";
 
 const usernameSchema = z
   .string()
@@ -35,16 +36,18 @@ async function assertAdmin(context: { supabase: any; userId: string }) {
 export const getMyAccount = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data: profile } = await context.supabase
+    const { data: profile, error: profileError } = await context.supabase
       .from("profiles")
       .select("id, username, full_name, dashboard_url, is_active")
       .eq("id", context.userId)
       .maybeSingle();
+    if (profileError) throw new Error(profileError.message);
 
-    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+    const { data: isAdmin, error: roleError } = await context.supabase.rpc("has_role", {
       _user_id: context.userId,
       _role: "admin",
     });
+    if (roleError) throw new Error(roleError.message);
 
     return { profile, isAdmin: Boolean(isAdmin) };
   });
@@ -222,7 +225,17 @@ export const listMyDashboards = createServerFn({ method: "GET" })
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: true });
     if (error) throw new Error(error.message);
-    return data ?? [];
+    if (data?.length) return data;
+
+    // Admin privileges and report assignments are separate. Read only this
+    // user's original assignment, with the same authenticated RLS client.
+    const { data: profile, error: profileError } = await context.supabase
+      .from("profiles")
+      .select("id, dashboard_url, created_at")
+      .eq("id", context.userId)
+      .maybeSingle();
+    if (profileError) throw new Error(profileError.message);
+    return resolveAssignedDashboards([], profile);
   });
 
 export const listUserDashboards = createServerFn({ method: "GET" })

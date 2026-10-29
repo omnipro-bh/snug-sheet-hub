@@ -25,6 +25,8 @@ export const Route = createFileRoute("/_authenticated/admin")({
       { name: "description", content: "Create accounts and assign each one its reporting dashboards." },
       { property: "og:title", content: "Users — Insight Portal" },
       { property: "og:description", content: "Create accounts and assign dashboards." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: AdminPage,
