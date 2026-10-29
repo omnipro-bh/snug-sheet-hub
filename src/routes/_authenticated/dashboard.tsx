@@ -14,6 +14,8 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
       { name: "description", content: "Your live reporting dashboards, prepared by your administrator." },
       { property: "og:title", content: "Dashboard — Insight Portal" },
       { property: "og:description", content: "Your live reporting dashboards." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Dashboard,

@@ -15,6 +15,8 @@ export const Route = createFileRoute("/")({
           "Sign in with the username and password provided by your administrator to open your live reporting dashboard.",
       },
       { property: "og:title", content: "Sign in — Insight Portal" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       {
         property: "og:description",
         content: "Secure access to your personal reporting dashboard.",

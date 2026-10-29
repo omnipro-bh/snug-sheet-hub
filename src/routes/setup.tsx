@@ -13,6 +13,8 @@ export const Route = createFileRoute("/setup")({
       { name: "description", content: "One-time setup of the administrator account for the portal." },
       { property: "og:title", content: "Create admin account — Insight Portal" },
       { property: "og:description", content: "One-time administrator setup." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "noindex" },
     ],
   }),
